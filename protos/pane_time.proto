@@ -1,0 +1,29 @@
+// Auxiliary Protocol Buffer for the Particpatory Networking API
+// http://pane.cs.brown.edu
+//
+// Author: Andrew Ferguson (adf@cs.brown.edu)
+//
+
+package pane;
+option java_package = "edu.brown.cs.pane";
+
+////////////////////////////////////////////////////////////////////////////////
+// 
+// Time Handling
+//
+// To express either a fixed time (seconds since Unix epoch), or a time
+// relative to when the message arrives at the server.
+// For example "now" is type:  TT_RELATIVE, time: 0
+//
+////////////////////////////////////////////////////////////////////////////////
+
+enum TimeType {
+  TT_UNKNOWN = 0;
+  TT_RELATIVE = 1;
+  TT_ABSOLUTE = 2;
+}
+
+message Time {
+  optional TimeType type = 1;  // required
+  optional uint32 time = 2;  // required
+}

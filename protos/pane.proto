@@ -1,0 +1,166 @@
+// Protocol Buffer describing the Particpatory Networking API
+// http://pane.cs.brown.edu
+//
+// Author: Andrew Ferguson (adf@cs.brown.edu)
+//
+
+package pane;
+option java_package = "edu.brown.cs.pane";
+
+import "ip_and_port.proto";
+import "pane_time.proto";
+
+////////////////////////////////////////////////////////////////////////////////
+// 
+// PANE Shares
+//
+// A share describes *who* can say *what* about *which* flows in the network
+//   who - set of Principals
+//   what - set of Privileges
+//   which - set of Flows
+//
+////////////////////////////////////////////////////////////////////////////////
+
+message ShareID {
+  optional string name = 1;  // required
+}
+
+message Share {
+  optional ShareID id = 1;  // required
+  // the following reference Share.id
+  optional ShareID parent = 2;  // required, except for RootShare
+  repeated ShareID subshare = 3;
+
+  // skip to 10 to leave room for other metadata
+  repeated Principal principal = 10;  // empty means all principals TODO(adf): sure?
+  repeated Flow      flow      = 11;  // empty means all flows
+  repeated Privilege privilege = 12;  // empty means NO privileges
+}
+
+//////////////
+// Principals
+//////////////
+
+message Principal {
+  optional string user = 1;  // empty means all users
+  optional string host = 2;  // empty means all hosts
+  optional string application = 3;  // empty means all applications
+}
+
+//////////////
+// Flows
+//////////////
+
+// With Flows, any field left empty is treated as a wildcard
+message Flow {
+  optional IPAddress src_ip = 1;
+  optional IPAddress dst_ip = 2;
+  optional TransportProto transport_proto = 3;
+  optional Port src_port = 4;
+  optional Port dst_port = 5;
+}
+
+//////////////
+// Privileges
+//////////////
+
+// TODO(adf): administrative privileges? (add user, create subshare, etc.)
+enum PrivilegeType {
+  PT_UNKNOWN = 0;
+  PT_REQUEST = 1;
+  PT_HINT = 2;
+  PT_QUERY = 3;
+}
+
+message Privilege {
+  optional PrivilegeType type = 1;  // required
+
+  optional RequestPrivilege request = 2;
+  optional HintPrivilege hint = 3;
+  optional QueryPrivilege query = 4;
+}
+
+// Limits for Request privileges
+message RequestPrivilege {
+  optional RequestType type = 1;
+
+  // can be used by all request types
+  optional uint32 time_limit = 2;
+  // can be used by RT_RESERVE, RT_RATE_LIMIT
+  optional uint32 bandwidth_limit = 3;
+  // can be used by RT_WAYPOINT, RT_RESERVE
+  repeated IPAddress ip_limit = 4;
+}
+
+// Limits for Hint privileges
+message HintPrivilege {
+  optional HintType type = 1;
+  // can be used by HT_DURATION
+  optional uint32 time_limit = 2;
+}
+
+// Limits for Query privileges
+message QueryPrivilege {
+  optional QueryType type = 1;
+  // can by used by QT_TRAFFIC
+  repeated IPAddress src_ip = 2;
+  repeated IPAddress dst_ip = 3;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// 
+// PANE Verbs: Requests, Hints, Queries
+//
+////////////////////////////////////////////////////////////////////////////////
+
+enum RequestType {
+  RT_UNKNOWN = 0;
+  RT_ALLOW = 1;
+  RT_DENY = 2;
+  RT_RESERVE = 3;
+  RT_RATE_LIMIT = 4;
+  RT_WAYPOINT = 5;
+  RT_AVOID = 6;
+}
+
+message Request {
+  optional RequestType type = 1;  // required
+  optional Principal principal = 2;  // required
+  repeated Flow flow = 3;  // empty means all flows
+  // references Share.id
+  optional ShareID share = 4;  // required
+  optional bool strict = 5 [default = true];
+
+  optional Time from = 6;
+  optional Time until = 7;
+
+  // required for RT_RESERVE, RT_RATE_LIMIT
+  optional uint32 bandwidth = 20;
+  // required for RT_WAYPOINT, RT_AVOID
+  optional uint32 ip = 21;
+}
+
+enum QueryType {
+  QT_UNKNOWN = 0;
+  QT_TRAFFIC = 1;
+}
+
+message Query {
+  optional QueryType type = 1;  // required
+
+  // required for QT_TRAFFIC
+  optional IPAddress src_ip = 20;
+  optional IPAddress dst_ip = 21;
+}
+
+enum HintType {
+  HT_UNKNOWN = 0;
+  HT_DURATION = 1;
+}
+
+message Hint {
+  optional HintType type = 1;  // required
+
+  // required for HT_DURATION
+  optional Time duration = 20;
+}
