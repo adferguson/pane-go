@@ -1,0 +1,8 @@
+.DS_Store
+.*.swp
+*.pb.go
+*.class
+*.pyc
+.project
+profile
+pane-go
