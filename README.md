@@ -38,13 +38,17 @@ PANE requires:
   * Go packages: goprotobuf, zmq3
 
 Detailed instructions for building:
-    go get github.com/pebbe/zmq3
-    go get code.google.com/p/goprotobuf/{proto,protoc-gen-go}
-    make
+<pre>
+go get github.com/pebbe/zmq3
+go get code.google.com/p/goprotobuf/{proto,protoc-gen-go}
+make
+</pre>
 
 Pre-install, get ZeroMQ and Protobufs installed. Easy on Mac OS X with brew:
-    brew install protoc
-    brew install zeromq
+<pre>
+brew install protoc
+brew install zeromq
+</pre>
 
 You will also need `$GOPATH` set somewhere sensible, and for `$GOPATH/bin` to be
 in your `$PATH`.
