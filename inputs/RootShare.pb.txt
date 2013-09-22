@@ -1,0 +1,42 @@
+id {
+  name: "RootShare"
+}
+principal {
+  user: "root"
+}
+privilege {
+  type: PT_REQUEST
+  request {
+    type: RT_ALLOW
+  }
+}
+privilege {
+  type: PT_REQUEST
+  request {
+    type: RT_DENY
+  }
+}
+privilege {
+  type: PT_REQUEST
+  request {
+    type: RT_RESERVE
+  }
+}
+privilege {
+  type: PT_REQUEST
+  request {
+    type: RT_RATE_LIMIT
+  }
+}
+privilege {
+  type: PT_REQUEST
+  request {
+    type: RT_WAYPOINT
+  }
+}
+privilege {
+  type: PT_REQUEST
+  request {
+    type: RT_AVOID
+  }
+}

@@ -13,6 +13,7 @@ import (
     "goof/of"
     "log"
     "os"
+    "io/ioutil"
     "pane"
 )
 
@@ -72,6 +73,13 @@ func newSwitch(sw *controller.Switch) {
 }
 
 func prototest() {
+    share := &pane.Share{}
+    dat, err := ioutil.ReadFile("input/RootShare.pb.txt")
+    err = proto.UnmarshalText(string(dat), share)
+    if err != nil {
+        log.Fatal("unmarshaling error: ", err)
+    }
+
     test := &pane.Time{
         Type: pane.TimeType_TT_RELATIVE.Enum(),
         Time: proto.Uint32(10),
@@ -80,6 +88,7 @@ func prototest() {
     if err != nil {
         log.Fatal("marshaling error: ", err)
     }
+
     newTest := &pane.Time{}
     err = proto.Unmarshal(data, newTest)
     if err != nil {
