@@ -7,113 +7,67 @@
 package main
 
 import (
-    "runtime/pprof"
-    "code.google.com/p/goprotobuf/proto"
-    "goof/controller"
-    "goof/of"
-    "log"
-    "os"
-    "io/ioutil"
-    "pane"
+  "runtime/pprof"
+  "github.com/samuel/go-thrift/thrift"
+  "goof/controller"
+
+  "fmt"
+  "log"
+  "net"
+  "net/rpc"
+  "os"
+
+  "pane"
 )
 
-func newSwitch(sw *controller.Switch) {
-    defer func() {
-        pprof.StopCPUProfile()
-        recover()
-    }()
+func thrifttest(service pane.PaneService) {
 
-    // Learning switch
-    routes := make(map[[of.EthAlen]uint8]uint16, 1000)
+  test := &pane.Principal {
+    User: pane.ThriftString("root"),
+  }
 
-    sw.HandlePacketIn = func(msg *of.PacketIn) {
-        routes[msg.EthFrame.SrcMAC] = msg.InPort
-        outPort, found := routes[msg.EthFrame.DstMAC]
-        if !found {
-            err := sw.Send(&of.FlowMod{
-                Xid: msg.Xid,
-                Match: of.Match{
-                    Wildcards: of.FwAll ^ of.FwDlSrc ^ of.FwDlDst,
-                    DlSrc:     msg.EthFrame.SrcMAC,
-                    DlDst:     msg.EthFrame.DstMAC},
-                BufferId:    msg.BufferId,
-                Flags:       of.FCAdd,
-                HardTimeout: 5,
-                Actions:     []of.Action{&of.ActionOutput{of.PortFlood, 0}}})
-            if err != nil {
-                log.Printf("Erroring sending: %v", err)
-            }
-            log.Printf("flooding %v", msg.EthFrame.EthernetHeader)
-        } else {
-            err := sw.Send(&of.FlowMod{
-                Xid: msg.Xid,
-                Match: of.Match{
-                    Wildcards: of.FwAll ^ of.FwDlSrc ^ of.FwDlDst,
-                    DlSrc:     msg.EthFrame.SrcMAC,
-                    DlDst:     msg.EthFrame.DstMAC},
-                BufferId:    msg.BufferId,
-                Flags:       of.FCAdd,
-                HardTimeout: 60,
-                Actions:     []of.Action{&of.ActionOutput{outPort, 0}}})
-            if err != nil {
-                log.Printf("Erroring sending: %v", err)
-            }
-
-        }
-    }
-    sw.HandleSwitchFeatures = func(msg *of.SwitchFeatures) {
-        log.Printf("Datapath %x online", msg.DatapathId)
-    }
-
-    sw.HandlePortStatus = func(msg *of.PortStatus) {
-        // silently ignore
-    }
-
-    sw.Serve()
+  fmt.Println(test);
 }
 
-func prototest() {
-    share := &pane.Share{}
-    dat, err := ioutil.ReadFile("input/RootShare.pb.txt")
-    err = proto.UnmarshalText(string(dat), share)
-    if err != nil {
-        log.Fatal("unmarshaling error: ", err)
-    }
+func startPane() {
+  pane_server := new(pane.PaneServer)
+  pane_server.Init()
+  rpc.RegisterName("Thrift", &pane.PaneServiceServer{pane_server})
 
-    test := &pane.Time{
-        Type: pane.TimeType_TT_RELATIVE.Enum(),
-        Time: proto.Uint32(10),
-    }
-    data, err := proto.Marshal(test)
-    if err != nil {
-        log.Fatal("marshaling error: ", err)
-    }
+  thrifttest(pane_server)
 
-    newTest := &pane.Time{}
-    err = proto.Unmarshal(data, newTest)
+  ln, err := net.Listen("tcp", ":4242")
+  if err != nil {
+    panic(err)
+  }
+
+  for {
+    conn, err := ln.Accept()
     if err != nil {
-        log.Fatal("unmarshaling error: ", err)
+      fmt.Printf("ERROR: %+v\n", err)
+      continue
     }
-    // Now test and newTest contain the same data.
-    if test.GetTime() != newTest.GetTime() {
-        log.Fatalf("data mismatch %q != %q", test.GetTime(), newTest.GetTime())
-    }
+    fmt.Printf("New connection %+v\n", conn)
+    go rpc.ServeCodec(thrift.NewServerCodec(conn,
+                      thrift.NewBinaryProtocol(true, false)))
+  }
 }
 
 func main() {
-    f, _ := os.Create("profile")
-    err2 := pprof.StartCPUProfile(f)
-    if err2 != nil {
-        panic(err2)
-    }
-    defer func() {
-        log.Printf("Unprofiling")
-    }()
+  f, _ := os.Create("profile")
+  err2 := pprof.StartCPUProfile(f)
+  if err2 != nil {
+      panic(err2)
+  }
+  defer func() {
+      log.Printf("Unprofiling")
+  }()
 
-    prototest()
-    log.Printf("Starting server ...")
-    ctrl := controller.NewController()
-    err := ctrl.Accept(6633, newSwitch)
+  go startPane()
 
-    panic(err)
+  log.Printf("Starting OpenFlow server ...")
+  ctrl := controller.NewController()
+  err := ctrl.Accept(6633, pane.NewSwitch)
+
+  panic(err)
 }

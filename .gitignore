@@ -1,8 +1,9 @@
 .DS_Store
 .*.swp
-*.pb.go
+src/pane/pane.go
 *.class
 *.pyc
 .project
 profile
 pane-go
+gen-py

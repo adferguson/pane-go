@@ -24,7 +24,7 @@ Code Layout
 
 `main.go`          (Execution entry point)
 
-`/protos/`         (Protocol Buffers defining the API)
+`pane.thrift`      (Thrift file defining the API)
 
 
 Building PANE 
@@ -33,21 +33,12 @@ Building PANE
 PANE requires:
   * Go compiler (tested with go 1.1.1)
   * Brown's Go-OpenFlow library (GoOF)
-  * Google Protocol Buffers (tested with protoc 2.5.0)
-  * ZeroMQ (tested with libzmq 3.2.3)
-  * Go packages: goprotobuf, zmq3
+  * Go packages: go-thrift (which also provides `generator`)
 
 Detailed instructions for building:
 <pre>
-go get github.com/pebbe/zmq3
-go get code.google.com/p/goprotobuf/{proto,protoc-gen-go}
+go get github.com/samuel/go-thrift
 make
-</pre>
-
-Pre-install, get ZeroMQ and Protobufs installed. Easy on Mac OS X with brew:
-<pre>
-brew install protoc
-brew install zeromq
 </pre>
 
 You will also need `$GOPATH` set somewhere sensible, and for `$GOPATH/bin` to be
@@ -55,6 +46,11 @@ in your `$PATH`.
 
 Lastly, make sure GoOF is in your `$GOPATH`, or do `go get github.com/brownsys/goof`.
 [Not actually working yet, I think.]
+
+Optionallly, you may use Apache Thrift (tested with 0.9.0) and the Python bindings
+for Thrift to run the simple Python client. The easiest way to compile pane.thrift
+is: `thrift --gen py pane.thrift`.
+
 
 
 Research
@@ -65,4 +61,4 @@ PANE is part of the [participatory networking project](http://pane.cs.brown.edu)
 
 Gofmt
 -------------------------
-This looks nice: `gofmt -tabwidth=4 -tabs=false`
+This looks nice: `gofmt -tabwidth=2 -tabs=false`
