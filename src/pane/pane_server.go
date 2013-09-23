@@ -83,12 +83,18 @@ func (server *PaneServer) NewShare(share *Share) (*GenericResponse, error) {
 }
 
 // TODO(adf): actually do filtering
+// TODO(adf): needs error handling
 func (server *PaneServer) ListShares(share_filter *ShareFilter) (*ShareListResponse, error) {
+  var rv *ShareListResponse
 
-  rv := &ShareListResponse { Result: ResultSuccess.Enum() }
+  server.stLock.RLock()
+
+  rv = &ShareListResponse { Result: ResultSuccess.Enum() }
   for _, v := range server.shareTree {
     rv.ShareId = append(rv.ShareId, v.Id)
   }
+
+  server.stLock.RUnlock()
 
   return rv, nil
 }
