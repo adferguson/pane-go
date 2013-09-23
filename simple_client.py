@@ -27,13 +27,16 @@ try:
 
   # print the shares, add a share, then print them again
 
-  sharelist = client.listShares(ShareFilter())
+  auth = client.authenticate(Principal(user="root"))
+  print auth
+
+  sharelist = client.listShares(auth.nonce, ShareFilter())
   print sharelist
 
-  response = client.newShare(adfShare)
+  response = client.newShare(auth.nonce, adfShare)
   print response
 
-  sharelist = client.listShares(ShareFilter())
+  sharelist = client.listShares(auth.nonce, ShareFilter())
   print sharelist
 
   transport.close()

@@ -239,6 +239,12 @@ struct GenericResponse {
   2: optional string msg;
 }
 
+struct AuthenticationResponse {
+  1: optional Result result;  // required
+  2: optional string msg;
+  3: optional i64 nonce;
+}
+
 struct Grant {
   // References Share.id
   1: optional ShareID share_id;  // required
@@ -275,15 +281,15 @@ struct QueryResponse {
 }
 
 service PaneService {
-  GenericResponse authenticate(1: Principal principal);
+  AuthenticationResponse authenticate(1: Principal principal);
 
-  GenericResponse grantShare(1: Grant grant);
-  GenericResponse newShare(1: Share share);
-// TODO(adf):  ... getSchedule (...);
-  ShareListResponse listShares(1: ShareFilter share_filter);
-  ShareResponse viewShare(1: ShareID share_id);
+  GenericResponse grantShare(1: i64 nonce, 2: Grant grant);
+  GenericResponse newShare(1: i64 nonce, 2: Share share);
+// TODO(adf):  ... getSchedule (1: i64 nonce, ...);
+  ShareListResponse listShares(1: i64 nonce, 2: ShareFilter share_filter);
+  ShareResponse viewShare(1: i64 nonce, 2: ShareID share_id);
 
-  RequestResponse makeRequest(1: Request request);
-  QueryResponse issueQuery(1: Query query);
-  GenericResponse provideHint(1: Hint hint);
+  RequestResponse makeRequest(1: i64 nonce, 2: Request request);
+  QueryResponse issueQuery(1: i64 nonce, 2: Query query);
+  GenericResponse provideHint(1: i64 nonce, 2: Hint hint);
 }
