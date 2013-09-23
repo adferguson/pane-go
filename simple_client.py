@@ -12,25 +12,32 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
-# Make an object
-adfShare = Share(id=ShareID(name="adfShare"),
-                 parent=ShareID(name="RootShare"))
+try:
+  # Make an object
+  adfShare = Share(id=ShareID(name="adfShare"),
+                   parent=ShareID(name="RootShare"))
 
-# Talk to a server via TCP sockets, using a binary protocol
-transport = TSocket.TSocket("localhost", 4242)
-transport.open()
-protocol = TBinaryProtocol.TBinaryProtocol(transport)
+  # Talk to a server via buffered TCP sockets, using a binary protocol
+  transport = TSocket.TSocket("localhost", 4242)
+  transport = TTransport.TBufferedTransport(transport)
+  protocol = TBinaryProtocol.TBinaryProtocol(transport)
 
-# print the shares, add a share, then print them again
+  client = PaneService.Client(protocol)
+  transport.open()
 
-service = PaneService.Client(protocol)
+  # print the shares, add a share, then print them again
 
-sharelist = service.listShares(ShareFilter())
-print sharelist
+  sharelist = client.listShares(ShareFilter())
+  print sharelist
 
-response = service.newShare(adfShare)
-print response
+  response = client.newShare(adfShare)
+  print response
 
-sharelist = service.listShares(ShareFilter())
-print sharelist
+  sharelist = client.listShares(ShareFilter())
+  print sharelist
+
+  transport.close()
+
+except Thrift.TException, tx:
+    print "Exception: %s" % (tx.message)
 
